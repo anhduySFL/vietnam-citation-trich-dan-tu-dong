@@ -95,12 +95,16 @@ export interface CitationItem {
   // Non-Latin translation
   translatedTitle?: string;
 
+  // Legacy/Compatibility fields
+  pubDateExact?: string;
+  totalPageCount?: number | string;
+
   // Source tracking
   fieldSources?: Record<string, MetadataFieldSource>;
 
   // Session TTL metadata
-  createdAt: number;
-  expiresAt: number;
+  createdAt?: number;
+  expiresAt?: number;
 }
 
 export interface InTextCitationOptions {

@@ -1,5 +1,7 @@
-import type { CitationItem, Author, InTextCitationOptions } from '../types/citation';
+import type { CitationItem, Author, InTextCitationOptions, FormattedCitation } from '../types/citation';
 import { formatAuthorForApaBib, getAuthorInTextKey } from '../utils/nameParser';
+
+export type { FormattedCitation };
 
 export function formatApaAuthors(authors: Author[]): string {
   if (!authors || authors.length === 0) return '';
