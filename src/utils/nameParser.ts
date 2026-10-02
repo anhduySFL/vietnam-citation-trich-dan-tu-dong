@@ -34,7 +34,6 @@ export function parseAuthorName(raw: string, isCorporate = false, forcedVietname
     cleanName = trimmed.replace(/\[(.*?)\]/, '').trim();
   }
 
-  // Handle "Surname, Given M." or natural "Given M. Surname" or "Nguyễn Văn A"
   const isVN = forcedVietnamese !== undefined ? forcedVietnamese : isLikelyVietnameseName(cleanName);
 
   let family = '';
@@ -42,7 +41,7 @@ export function parseAuthorName(raw: string, isCorporate = false, forcedVietname
   let given = '';
 
   if (cleanName.includes(',')) {
-    // Foreign style: "Lenin, Vladimir Ilyich" or "Gaetke, L.M."
+    // Foreign comma format: "Smith, John A." or "Lenin, V.I."
     const [last, first] = cleanName.split(',').map(s => s.trim());
     family = last;
     const firstParts = first ? first.split(/\s+/) : [];
@@ -51,12 +50,11 @@ export function parseAuthorName(raw: string, isCorporate = false, forcedVietname
   } else {
     const parts = cleanName.split(/\s+/);
     if (isVN) {
-      // Vietnamese: Họ là từ đầu tiên, Tên là từ cuối cùng, Đệm là các từ ở giữa
+      // Vietnamese: Họ là từ đầu, Tên là từ cuối, Đệm là giữa
       family = parts[0] || '';
       given = parts.length > 1 ? parts[parts.length - 1] : '';
       middle = parts.length > 2 ? parts.slice(1, -1).join(' ') : '';
     } else {
-      // Western natural: "Vladimir Ilyich Lenin" -> Given: Vladimir, Middle: Ilyich, Family: Lenin
       given = parts[0] || '';
       family = parts.length > 1 ? parts[parts.length - 1] : '';
       middle = parts.length > 2 ? parts.slice(1, -1).join(' ') : '';
@@ -94,9 +92,9 @@ export function getInitialsWithSpace(str?: string): string {
 }
 
 /**
- * Format author name for APA Bibliography (Đại học Huế):
- * - Người nước ngoài: Họ, các chữ cái đầu tên viết hoa kèm dấu chấm. Ví dụ: Lenin, V.I. hoặc Gaetke, L.M.
- * - Người Việt: Tên, các chữ cái đầu họ và đệm viết hoa kèm dấu chấm. Ví dụ: Châu, N.B. hoặc Hương, N. T. L.
+ * Format author name for APA Bibliography:
+ * - Foreign: Surname, Initials (e.g. Smith, J. A.)
+ * - Vietnamese: Tên, Họ Đệm viết tắt hoặc Họ tên đầy đủ chuẩn hóa
  */
 export function formatAuthorForApaBib(author: Author): string {
   if (author.isCorporate) return author.rawName;
@@ -106,8 +104,6 @@ export function formatAuthorForApaBib(author: Author): string {
       .filter(Boolean)
       .map(part => getInitials(part))
       .join('');
-    
-    // Add original script if any: Lizhi, X. [谢丽芝]
     const scriptSuffix = author.originalScript ? ` [${author.originalScript}]` : '';
     return `${author.given}, ${initials}${scriptSuffix}`;
   } else {
@@ -121,9 +117,9 @@ export function formatAuthorForApaBib(author: Author): string {
 }
 
 /**
- * Format author name for IEEE Bibliography (Đại học Huế):
- * - Người nước ngoài: Tên viết tắt, Họ đầy đủ. Ví dụ: V.I. Lenin, L. M. Gaetke
- * - Người Việt: Họ đệm viết tắt, Tên đầy đủ. Ví dụ: N.B. Châu, N. T. L Hương
+ * Format author name for IEEE Bibliography:
+ * - Foreign: Initials Surname (e.g. J. A. Smith)
+ * - Vietnamese: Initials GivenName (e.g. N. B. Châu)
  */
 export function formatAuthorForIeeeBib(author: Author): string {
   if (author.isCorporate) return author.rawName;
@@ -146,11 +142,9 @@ export function formatAuthorForIeeeBib(author: Author): string {
 }
 
 /**
- * Format author name for VNU Bibliography:
- * - Người Việt: Giữ nguyên thứ tự thông thường "Trương Quang Học và Nguyễn Đức Ngữ", không đảo tên.
- * - Người nước ngoài:
- *   + Tác giả đầu tiên: Họ, Tên viết tắt (ví dụ: Sterling E.J.)
- *   + Tác giả thứ 2 trở đi: Tên viết tắt Họ (ví dụ: M.M. Hurley and Le Duc Minh)
+ * Format author name for VNU (Hanoi) Bibliography:
+ * - Vietnamese: Full natural name "Trương Quang Học" (sorted by given name in bibliography)
+ * - Foreign: Author 1: Surname Initials (e.g. Sterling E.J.), Author 2+: Initials Surname
  */
 export function formatAuthorForVnuBib(author: Author, index: number): string {
   if (author.isCorporate) return author.rawName;
@@ -163,26 +157,40 @@ export function formatAuthorForVnuBib(author: Author, index: number): string {
       .map(part => getInitials(part))
       .join('');
     if (index === 0) {
-      // First author: Surname Initials (e.g. Sterling E.J.)
       return `${author.family} ${initials}`.trim();
     } else {
-      // Subsequent authors: Initials Surname (e.g. M.M. Hurley)
       return `${initials} ${author.family}`.trim();
     }
   }
 }
 
 /**
- * Get In-Text primary identifier:
- * - APA ĐH Huế: Người Việt dùng Tên ("Hùng", "Tiến"); Nước ngoài dùng Họ ("Smith", "Obama")
- * - VNU: Người Việt dùng cả Họ Tên ("Nguyễn Văn A"); Nước ngoài dùng Họ ("Goedkoop")
+ * Format author name for VNUA Bibliography (Quyết định số 491/QĐ-HVN):
+ * - Tác giả Việt Nam: Sử dụng đầy đủ họ và tên theo tài liệu gốc (không đảo họ tên, không dùng dấu phẩy ngăn họ và tên).
+ * - Tác giả Nước ngoài: Họ đứng trước, viết tắt tên đệm và tên kèm theo dấu chấm "." (VD: Li H., Goodpaster K. E.)
  */
-export function getAuthorInTextKey(author: Author, style: 'apa' | 'vnu'): string {
+export function formatAuthorForVnuaBib(author: Author): string {
+  if (author.isCorporate) return author.rawName;
+
+  if (author.isVietnamese) {
+    return author.rawName;
+  } else {
+    // Foreign: Surname Initials with spaces: "Goodpaster K. E." or "Li H."
+    const initials = [author.given, author.middle]
+      .filter(Boolean)
+      .map(part => getInitialsWithSpace(part))
+      .join(' ')
+      .trim();
+    return initials ? `${author.family} ${initials}` : (author.family || author.rawName);
+  }
+}
+
+export function getAuthorInTextKey(author: Author, style: 'apa' | 'vnu' | 'vnua' | 'ieee'): string {
   if (author.isCorporate) return author.rawName;
   if (style === 'apa') {
     return author.isVietnamese ? (author.given || author.rawName) : (author.family || author.rawName);
-  } else {
-    // VNU
+  } else if (style === 'vnua' || style === 'vnu') {
     return author.isVietnamese ? author.rawName : (author.family || author.rawName);
   }
+  return author.family || author.rawName;
 }

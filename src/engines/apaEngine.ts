@@ -1,4 +1,4 @@
-import type { CitationItem, Author } from '../types/citation';
+import type { CitationItem, Author, InTextCitationOptions } from '../types/citation';
 import { formatAuthorForApaBib, getAuthorInTextKey } from '../utils/nameParser';
 
 export function formatApaAuthors(authors: Author[]): string {
@@ -22,10 +22,9 @@ export function formatApaAuthors(authors: Author[]): string {
 
 export function formatApaInText(
   item: CitationItem,
-  isNarrative = false,
-  pageNumbers?: string,
-  suffix = ''
+  options: InTextCitationOptions = {}
 ): string {
+  const { isNarrative = false, pageNumbers, suffixYear = '' } = options;
   const isEn = item.language === 'en';
   const etAl = isEn ? 'et al.' : 'và nnk.';
   const andSymbol = '&';
@@ -33,7 +32,6 @@ export function formatApaInText(
 
   let authorPart = '';
   if (!item.authors || item.authors.length === 0) {
-    // 3-5 words of title if no author
     const words = item.title.trim().split(/\s+/).slice(0, 4).join(' ');
     authorPart = `"${words}..."`;
   } else if (item.authors.length === 1) {
@@ -43,12 +41,11 @@ export function formatApaInText(
     const a2 = getAuthorInTextKey(item.authors[1], 'apa');
     authorPart = isNarrative ? `${a1} ${andWord} ${a2}` : `${a1} ${andSymbol} ${a2}`;
   } else {
-    // 3 or more authors
     const a1 = getAuthorInTextKey(item.authors[0], 'apa');
     authorPart = `${a1} ${etAl}`;
   }
 
-  const yearPart = item.year ? `${item.year}${suffix}` : (isEn ? 'n.d.' : 'k.n.');
+  const yearPart = item.year ? `${item.year}${suffixYear}` : (isEn ? 'n.d.' : 'k.n.');
   const pagePart = pageNumbers ? `, ${pageNumbers}` : '';
 
   if (isNarrative) {
@@ -58,12 +55,12 @@ export function formatApaInText(
   }
 }
 
-export interface FormattedCitation {
+export interface FormattedBibResult {
   html: string;
   plainText: string;
 }
 
-export function formatApaBibItem(item: CitationItem): FormattedCitation {
+export function formatApaBibItem(item: CitationItem): FormattedBibResult {
   const isEn = item.language === 'en';
   const authorsStr = formatApaAuthors(item.authors);
   const yearStr = item.year ? `(${item.year}).` : (isEn ? '(n.d.).' : '(k.n.).');
@@ -74,7 +71,8 @@ export function formatApaBibItem(item: CitationItem): FormattedCitation {
   let plainBody = '';
 
   switch (item.type) {
-    case 'book': {
+    case 'book':
+    case 'book_print': {
       const placePub = item.place && item.publisher ? ` ${item.place}: ${item.publisher}.` : (item.publisher ? ` ${item.publisher}.` : '');
       htmlBody = `${authorsStr ? `${authorsStr} ${yearStr} ` : ''}<i>${title}</i>${translated}.${placePub}`;
       plainBody = `${authorsStr ? `${authorsStr} ${yearStr} ` : ''}${title}${translated}.${placePub}`;
@@ -93,19 +91,22 @@ export function formatApaBibItem(item: CitationItem): FormattedCitation {
       plainBody = `${authorsStr} ${yearStr} ${title}. ${editorsStr.replace(/<i>|<\/i>/g, '')}${bookTitlePlain}${pageInfo}.${placePub}`;
       break;
     }
-    case 'journal': {
+    case 'journal':
+    case 'journal_online': {
       const journalName = item.journalName ? `<i>${item.journalName}</i>` : '';
       const vol = item.volume ? `, <i>${item.volume}</i>` : '';
       const volPlain = item.volume ? `, ${item.volume}` : '';
       const issue = item.issue ? `(${item.issue})` : '';
       const pages = item.pages ? `, ${item.pages}.` : '.';
-      const doi = item.doi ? ` DOI: ${item.doi}` : '';
+      const doi = item.doi ? ` https://doi.org/${item.doi.replace(/^https?:\/\/doi\.org\//, '')}` : (item.url ? ` ${item.url}` : '');
 
       htmlBody = `${authorsStr} ${yearStr} ${title}${translated}. ${journalName}${vol}${issue}${pages}${doi}`;
       plainBody = `${authorsStr} ${yearStr} ${title}${translated}. ${item.journalName || ''}${volPlain}${issue}${pages}${doi}`;
       break;
     }
-    case 'conference': {
+    case 'conference':
+    case 'proceedings':
+    case 'conference_presentation': {
       const pageInfo = item.pages ? (isEn ? ` (pp. ${item.pages})` : ` (tr. ${item.pages})`) : '';
       const confInfo = item.conferenceName 
         ? `<i>${item.conferenceName}${item.conferenceLocation ? `, ${item.conferenceLocation}` : ''}${item.year ? `, ${item.year}` : ''}</i>`
@@ -120,7 +121,7 @@ export function formatApaBibItem(item: CitationItem): FormattedCitation {
       break;
     }
     case 'newspaper': {
-      const dateStr = item.pubDateExact ? `(${item.pubDateExact}).` : yearStr;
+      const dateStr = item.publicationDate ? `(${item.publicationDate}).` : yearStr;
       const paperName = item.newspaperName ? `<i>${item.newspaperName}</i>` : '';
       const pageInfo = item.pages ? (isEn ? `, pp. ${item.pages}.` : `, tr. ${item.pages}.`) : '.';
 
@@ -136,29 +137,19 @@ export function formatApaBibItem(item: CitationItem): FormattedCitation {
       plainBody = `${authorsStr} ${yearStr} ${title} (${inst}).`;
       break;
     }
-    case 'webpage': {
-      const accessStr = isEn 
-        ? `Retrieved ${item.accessDate || ''}, from ${item.url || ''}`
-        : `Truy cập ${item.accessDate || ''}, từ ${item.url || ''}`;
+    case 'webpage':
+    case 'org_online': {
+      const accessStr = item.accessDate 
+        ? (isEn ? `Retrieved ${item.accessDate}, from ${item.url || ''}` : `Truy cập ${item.accessDate}, từ ${item.url || ''}`)
+        : (item.url || '');
 
       if (!authorsStr) {
-        // No author: Move title to first
         htmlBody = `<i>${title}</i>. ${yearStr} ${accessStr}`;
         plainBody = `${title}. ${yearStr} ${accessStr}`;
       } else {
         htmlBody = `${authorsStr} ${yearStr} <i>${title}</i>. ${accessStr}`;
         plainBody = `${authorsStr} ${yearStr} ${title}. ${accessStr}`;
       }
-      break;
-    }
-    case 'legal': {
-      // Ví dụ ĐH Huế / NXB VNU
-      const auth = item.issuingAuthority || authorsStr || '';
-      const docNum = item.documentNumber ? ` ${item.documentNumber}` : '';
-      const dateExact = item.pubDateExact ? ` ngày ${item.pubDateExact}` : '';
-
-      htmlBody = `${auth} ${yearStr} Thông tư số${docNum}${dateExact} ${title}.`;
-      plainBody = `${auth} ${yearStr} Thông tư số${docNum}${dateExact} ${title}.`;
       break;
     }
     default: {
@@ -170,13 +161,6 @@ export function formatApaBibItem(item: CitationItem): FormattedCitation {
   return { html: htmlBody.trim(), plainText: plainBody.trim() };
 }
 
-/**
- * APA Bibliography Sorting:
- * Sắp xếp theo thứ tự bảng chữ cái tên tác giả đầu tiên.
- * - Người Việt: Tên -> Họ Đệm
- * - Người Nước ngoài: Họ -> Tên
- * - Cùng tác giả: xếp theo năm (tăng dần)
- */
 export function sortApaBibliography(items: CitationItem[]): CitationItem[] {
   return [...items].sort((a, b) => {
     const authorA = a.authors[0];
@@ -188,7 +172,6 @@ export function sortApaBibliography(items: CitationItem[]): CitationItem[] {
     const cmp = keyA.localeCompare(keyB, 'vi', { sensitivity: 'base' });
     if (cmp !== 0) return cmp;
 
-    // Same author: compare year
     const yearA = typeof a.year === 'number' ? a.year : parseInt(`${a.year}`) || 0;
     const yearB = typeof b.year === 'number' ? b.year : parseInt(`${b.year}`) || 0;
     return yearA - yearB;

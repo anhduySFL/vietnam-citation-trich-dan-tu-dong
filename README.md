@@ -1,41 +1,72 @@
-# 🎓 Vietnam Citation Studio
+# 🎓 TRÍCH DẪN TỰ ĐỘNG (Automatic Citation Generator)
 
-> **Hệ thống tạo & chuẩn hóa Trích dẫn & Danh mục Tài liệu Tham khảo (TLTK) cho Nghiên cứu Khoa học tại Việt Nam**  
-> Tuân thủ nghiêm ngặt **Quy định ĐH Huế (Chuẩn APA & IEEE)** và **NXB Đại học Quốc gia Hà Nội (Chuẩn VNU / Bộ GD&ĐT)**.
+> **Hệ thống tạo & chuẩn hóa Trích dẫn & Danh mục Tài liệu Tham khảo (TLTK) tự động cho Nghiên cứu Khoa học tại Việt Nam**  
+> Tuân thủ các quy chuẩn học thuật: **Chuẩn APA**, **Chuẩn IEEE**, **Chuẩn VNU (ĐHQG Hà Nội)** và **Chuẩn VNUA (Quyết định số 491/QĐ-HVN ngày 21/02/2020)**.
+
+---
+
+## 🚀 Bản Chất & Triết Lý Sản Phẩm
+
+Đây là một **Website Trích dẫn Tài liệu Tham khảo Tự động** hoạt động theo mô hình phiên tạm thời:
+- **Dán URL / DOI**: Tự động bóc tách siêu dữ liệu học thuật (JSON-LD, Citation Meta Tags, Dublin Core, OpenGraph, Crossref).
+- **Kiểm tra & Chỉnh sửa**: Người dùng rà soát và chỉnh sửa thông tin trực tiếp trước khi định dạng.
+- **Hỗ trợ 11 trường thông tin**: Có thể nhập thủ công linh hoạt bất kỳ khi nào cần.
+- **Bảo mật & Quyền riêng tư tuyệt đối**: **KHÔNG** lưu trữ thông tin người dùng vào `localStorage`, `sessionStorage`, `IndexedDB`, hay cơ sở dữ liệu vĩnh viễn.
+- **Cơ chế tự hủy (TTL 15 phút = 900 giây)**: Mọi dữ liệu trích dẫn chỉ tồn tại tạm thời trong bộ nhớ phiên làm việc (in-memory) và sẽ tự động xóa sạch khi hết hạn.
 
 ---
 
 ## 🌟 Tính Năng Nổi Bật
 
-1. **Hỗ trợ 3 chuẩn trích dẫn phổ biến nhất tại Việt Nam**:
-   - **APA (Đại học Huế)**: Trích dẫn theo kiểu *Tác giả - Năm* (`Tiến, 2010`), quy chuẩn hóa họ tên tác giả Việt Nam (`Châu, N.B.`), sắp xếp A-Z theo tên.
-   - **IEEE (Đại học Huế)**: Trích dẫn theo *Số trong ngoặc vuông* (`[1]`), tự động **gộp dải số liên tục** `[2–5]` hoặc số rời rạc `[2, 10]`, định dạng tên tác giả Việt (`N.B. Châu`), hỗ trợ hanging indent chuẩn học thuật.
-   - **VNU (NXB ĐHQG Hà Nội / Bộ GD&ĐT)**: Tự động **phân chia danh mục theo từng nhóm ngôn ngữ** (*TÀI LIỆU TIẾNG VIỆT*, *TÀI LIỆU TIẾNG ANH*,...), tác giả Việt giữ nguyên thứ tự họ tên tự nhiên nhưng xếp thứ tự A-Z theo Tên.
+### 1. Phân Tích & Bóc Tách Siêu Dữ Liệu Tự Động (URL / DOI)
+- **Hỗ trợ DOI**: Tự động phân giải qua Crossref API (`https://api.crossref.org/works/...`), bóc tách tác giả, tạp chí, số, tập, trang, năm xuất bản, nhà xuất bản.
+- **Hỗ trợ URL bài báo & trang web**: Tự động trích xuất theo thứ tự ưu tiên chuẩn học thuật:
+  1. `JSON-LD` (`schema.org/ScholarlyArticle`, `TechArticle`, ...)
+  2. `citation_*` meta tags (Google Scholar, Highwire Press)
+  3. `Dublin Core` (`dc.title`, `dc.creator`, `dc.date`, ...)
+  4. `OpenGraph` & `HTML title`
+- **Không tự bịa dữ liệu**: Trường nào không xác định được sẽ để trống để người dùng xác nhận hoặc bổ sung.
+- **Bảo vệ an toàn mạng (SSRF Protection)**: Chặn truy cập localhost, IP nội bộ (`127.0.0.1`, `10.x`, `192.168.x`, `172.16-31.x`), địa chỉ link-local (`169.254.x`), endpoint metadata của Cloud, giới hạn kích thước gói tin và timeout an toàn.
 
-2. **Bao phủ 9+ chủng loại tài liệu nghiên cứu**:
-   - Sách / Báo cáo kỹ thuật (`Book / Report`)
-   - Một chương trong sách có chủ biên (`Book Chapter`)
-   - Bài báo khoa học trên tạp chí (`Journal Article`) có DOI, tập, số
-   - Bài trong kỷ yếu hội thảo / hội nghị khoa học (`Conference Proceedings`)
-   - Luận án tiến sĩ / Luận văn thạc sĩ (`Theses / Dissertations`)
-   - Bài viết trên báo chí phổ thông (`Newspaper Article`)
-   - Tài liệu trực tuyến / website (`Webpage / Online`)
-   - Văn bản quy phạm pháp luật (`Legal Document`)
-   - Bản thảo chưa xuất bản (`Manuscript / Forthcoming`)
-   - Tài liệu tiếng nước ngoài phi Latinh (Nga, Trung, Nhật, Ả Rập...) với bản dịch tựa đề trong ngoặc vuông `[...]`.
+### 2. Bốn Chuẩn Trích Dẫn Học Thuật Chuẩn Xác
 
-3. **Bộ Tạo Trích Dẫn Thân Bài Tương Tác (In-Text Generator Playground)**:
-   - Tự do chọn nhiều nguồn tài liệu để mô phỏng trích dẫn trực tiếp (`tr. 97-98`) hoặc trích dẫn diễn giải.
-   - Hỗ trợ cả 2 dạng: *Trong ngoặc đơn* (Parenthetical) và *Dẫn dắt* (Narrative - "Theo Hair và nnk. (1998)...").
+1. **Chuẩn APA**:
+   - Trích dẫn trong bài: `(Tác giả, Năm)` hoặc `(Tác giả 1 & Tác giả 2, Năm)`, 3 tác giả trở lên dùng `(Tác giả 1 et al., Năm)`.
+   - Danh mục TLTK: Sắp xếp chữ cái A-Z theo họ tác giả, định dạng thụt dòng dòng thứ 2 (hanging indent), in nghiêng tên sách/tên tạp chí và tập.
+2. **Chuẩn IEEE**:
+   - Trích dẫn trong bài: Dạng số trong ngoặc vuông `[1]`, `[2]`.
+   - **Tự động gộp dải số liên tục**: Ví dụ trích dẫn nhiều nguồn tự động gom thành `[2–5]` thay vì `[2, 3, 4, 5]`, số rời rạc thành `[2, 5, 8]`.
+   - Tác giả nước ngoài dạng viết tắt tên trước họ: `J. K. Smith`, danh mục đánh số thứ tự `[1]`, `[2]`.
+3. **Chuẩn VNU (NXB Đại học Quốc gia Hà Nội)**:
+   - Dòng trích dẫn tham khảo chuẩn:
+     > *"Tham khảo Lưu Thế Anh (ch.b.), Võ Thanh Sơn, Lê Thị Vân Huệ, Bùi Ngọc Quý, Phương pháp luận nghiên cứu khoa học trong môi trường và phát triển bền vững, Nxb. Đại học Quốc gia Hà Nội, 2025, 492 tr."*
+   - Tự động phân chia danh mục thành **TÀI LIỆU TIẾNG VIỆT** và **TÀI LIỆU TIẾNG ANH / NƯỚC NGOÀI**.
+   - Tác giả Việt Nam giữ nguyên thứ tự họ tên tự nhiên, tác giả chủ biên ghi thêm `(ch.b.)`.
+4. **Chuẩn VNUA (Học viện Nông nghiệp Việt Nam - QĐ số 491/QĐ-HVN)**:
+   - Ban hành ngày 21/02/2020 với quy định chi tiết cho **11 loại tài liệu tham khảo**:
+     1. Bài báo trên tạp chí in
+     2. Bài báo trên tạp chí điện tử (có DOI hoặc URL)
+     3. Sách / giáo trình xuất bản
+     4. Chương trong sách có chủ biên (ch.b.)
+     5. Kỷ yếu hội nghị / hội thảo khoa học
+     6. Luận văn thạc sĩ / luận án tiến sĩ
+     7. Báo cáo kỹ thuật / đề tài nghiên cứu nghiệm thu
+     8. Văn bản quy phạm pháp luật / tiêu chuẩn kỹ thuật
+     9. Tài liệu từ website / internet
+     10. Bằng sáng chế (Patent)
+     11. Dữ liệu số / phần mềm nghiên cứu
+   - Quy tắc tác giả VNUA:
+     - Trích dẫn trong bài: 1 tác giả (`Nguyễn Văn A, 2020` hoặc `Smith, 2020`); 2 tác giả nối bằng ký tự `&` (`Nguyễn Văn A & Trần Văn B, 2021`); 3 tác giả trở lên dùng `và cs.` (tiếng Việt) hoặc `et al.` (tiếng Anh).
+     - Danh mục TLTK: Liệt kê đầy đủ tất cả tác giả (không dùng *và cs.*), nối tác giả cuối bằng `&`. Tác giả nước ngoài viết dạng `Họ Tên.Đệm.` (ví dụ: `Li H.`, `Goodpaster K. E.`). Tên tạp chí viết đầy đủ không viết tắt.
 
-4. **Xuất Bản & Chia Sẻ Chuyên Nghiệp**:
-   - 1-click **Xuất file Microsoft Word (.doc)** giữ nguyên định dạng in nghiêng, trích dẫn chuẩn và thụt dòng hanging indent.
-   - 1-click **Tải file BibTeX (.bib)** cho người dùng LaTeX / Overleaf.
-   - Sao chép toàn bộ danh mục dạng Rich Text hoặc Plain Text.
-   - Dữ liệu được lưu tự động trên trình duyệt (`LocalStorage`).
-
-5. **Sổ tay quy chuẩn tích hợp**:
-   - Tích hợp bảng tóm tắt đối chiếu trực quan quy tắc trích dẫn giữa 3 chuẩn để sinh viên và nhà nghiên cứu tiện tra cứu.
+### 3. Giao Diện & Trải Nghiệm Tinh Tế (Theo Mô tả.pdf)
+- Kiểu chữ học thuật thanh thoát: **Font Arsenal** (Google Fonts).
+- Hệ màu chủ đạo hiện đại: `#dcfdc3` (xanh nhạt), `#3a8080` (xanh mòng két học thuật), `#1b2835` (xanh than trầm), footer chuyển sắc `#518281`, `#2b7a70`, `#0f4b4f`, `#000000`.
+- Bo góc hiện đại `rounded-[10px]`.
+- Đồng hồ đếm ngược thời gian phiên làm việc (15:00 → 00:00).
+- Chức năng **Sao chép Text**, **Sao chép Định dạng (HTML/Word)**, và **Xuất file Word (.doc)** giữ trọn vẹn kiểu chữ in nghiêng và thụt dòng học thuật (hanging indent).
+- **Sổ tay tra cứu quy cách trích dẫn**: Hiển thị bảng đối chiếu trực quan 4 chuẩn.
+- **Khu vực Quản trị (Admin Modal)**: Cho phép mở rộng và định nghĩa thêm chuẩn trích dẫn tùy biến mới.
 
 ---
 
@@ -43,86 +74,108 @@
 
 ```
 citation-studio/
+├── api/
+│   └── fetch-metadata.ts        # Serverless API fetch URL an toàn (SSRF protected) cho Vercel
 ├── public/
-│   └── favicon.svg              # Icon sách học thuật
+│   └── favicon.svg              # Logo trích dẫn
 ├── src/
-│   ├── components/              # Các thành phần giao diện (UI Components)
-│   │   ├── Navbar.tsx           # Thanh điều hướng, chọn chuẩn, nút hành động
-│   │   ├── CitationCard.tsx     # Card hiển thị từng tài liệu, nhãn phân loại, copy nhanh
-│   │   ├── CitationFormModal.tsx# Form thêm/sửa động cho 9 loại tài liệu
-│   │   ├── InTextGenerator.tsx  # Trình giả lập trích dẫn trong thân bài
-│   │   ├── BibliographyView.tsx # Danh mục TLTK hoàn chỉnh (phân nhóm tiếng Việt/Anh)
-│   │   └── StyleGuideModal.tsx  # Sổ tay quy chuẩn trích dẫn ĐH Huế & VNU
-│   ├── data/
-│   │   └── sampleCitations.ts   # Bộ dữ liệu mẫu thực tế trích từ 2 văn bản gốc
-│   ├── engines/                 # Bộ quy tắc định dạng (Format Engines)
-│   │   ├── apaEngine.ts         # Logic chuẩn APA ĐH Huế
-│   │   ├── ieeeEngine.ts        # Logic chuẩn IEEE ĐH Huế & gộp dải số [2-5]
-│   │   └── vnuEngine.ts         # Logic chuẩn VNU & phân loại ngôn ngữ
+│   ├── components/              # Các thành phần giao diện (UI)
+│   │   ├── AboutModal.tsx       # Giới thiệu hệ thống & chính sách bảo mật
+│   │   ├── AdminModal.tsx       # Modal quản trị: Thêm quy cách trích dẫn mới
+│   │   ├── CitationResult.tsx   # Hiển thị trích dẫn trong bài & tài liệu tham khảo
+│   │   ├── Footer.tsx           # Chân trang chuẩn màu sắc & thông tin liên hệ tác giả
+│   │   ├── ManualForm.tsx       # Form nhập liệu thủ công với 11 trường thông tin
+│   │   ├── MetadataPreview.tsx  # Xem lại & chỉnh sửa siêu dữ liệu bóc tách được
+│   │   ├── Navbar.tsx           # Thanh điều hướng, đếm ngược TTL 15 phút, menu
+│   │   ├── SessionList.tsx      # Danh sách trích dẫn tạm thời trong phiên làm việc
+│   │   ├── StyleGuideView.tsx   # Sổ tay tra cứu hướng dẫn chi tiết 4 chuẩn
+│   │   ├── StyleSelector.tsx    # Thanh chuyển đổi nhanh giữa 4 chuẩn trích dẫn
+│   │   └── UrlDoiInput.tsx      # Khung dán URL/DOI với hiệu ứng phân tích tự động
+│   ├── engines/                 # Bộ sinh trích dẫn độc lập (Citation Engines)
+│   │   ├── apaEngine.ts         # Chuẩn APA
+│   │   ├── ieeeEngine.ts        # Chuẩn IEEE (gộp dải số [2-5])
+│   │   ├── styleRegistry.ts     # Bộ điều phối & đăng ký phong cách trích dẫn
+│   │   ├── vnuHanoiEngine.ts    # Chuẩn VNU ĐHQG Hà Nội (Lưu Thế Anh ch.b.)
+│   │   └── vnuaEngine.ts        # Chuẩn VNUA (QĐ 491/QĐ-HVN - 11 loại tài liệu)
 │   ├── types/
-│   │   └── citation.ts          # Định nghĩa TypeScript data models
+│   │   └── citation.ts          # Định nghĩa TypeScript data models & CitationItem
 │   ├── utils/
-│   │   ├── nameParser.ts        # Nhận diện họ tên người Việt vs Nước ngoài
-│   │   └── bibtex.ts            # Chuyển đổi BibTeX
-│   ├── App.tsx                  # Ứng dụng chính (State management, tìm kiếm, lọc)
-│   ├── index.css                # Tailwind CSS v4 & Academic typography
+│   │   ├── doiResolver.ts       # Phân giải DOI qua Crossref REST API
+│   │   ├── htmlMetadataParser.ts# Bóc tách JSON-LD, citation_*, DC, OpenGraph
+│   │   ├── metadataFetcher.ts   # Điều phối đọc URL/DOI qua proxy an toàn
+│   │   ├── nameParser.ts        # Xử lý tên tiếng Việt, tác giả nước ngoài, tổ chức
+│   │   ├── ssrfProtection.ts    # Kiểm tra & chặn SSRF (Private IP, Localhost)
+│   │   └── useSessionTtl.ts     # Quản lý vòng đời dữ liệu 15 phút trong React state
+│   ├── App.tsx                  # Luồng xử lý chính: Input -> Preview -> Result
+│   ├── index.css                # Tùy biến Tailwind, font Arsenal, academic hanging indent
 │   └── main.tsx                 # Điểm khởi chạy React 19
-├── index.html                   # HTML template chuẩn SEO & Google Fonts
-├── package.json                 # Cấu hình dependencies (React 19, Lucide, Tailwind)
-├── tsconfig.json                # Cấu hình TypeScript
-├── vercel.json                  # Cấu hình Deploy Vercel (1-Click Deploy)
-├── vite.config.ts               # Cấu hình Vite & Tailwind v4
-└── README.md                    # Tài liệu hướng dẫn sử dụng & triển khai
+├── index.html                   # HTML template nạp Google Fonts Arsenal
+├── package.json                 # Cấu hình dự án (React 19, Lucide, Tailwind v4)
+├── tsconfig.json                # Cấu hình TypeScript nghiêm ngặt
+├── vercel.json                  # Cấu hình định tuyến Serverless Functions trên Vercel
+├── vite.config.ts               # Cấu hình Vite & Dev Server proxy
+└── README.md                    # Tài liệu kỹ thuật dự án
 ```
 
 ---
 
-## 🚀 Hướng Dẫn Chạy Cục Bộ (Local Development)
+## 🛠️ Hướng Dẫn Chạy Cục Bộ (Local Development)
 
-Yêu cầu máy tính đã cài đặt **Node.js** (khuyến nghị từ Node 18 trở lên).
+Yêu cầu máy tính đã cài đặt **Node.js** (từ phiên bản 18 trở lên).
 
 ```bash
 # 1. Chuyển vào thư mục dự án
 cd citation-studio
 
-# 2. Cài đặt các gói thư viện
+# 2. Cài đặt các dependencies
 npm install
 
-# 3. Khởi chạy máy chủ phát triển
+# 3. Khởi chạy máy chủ phát triển Vite
 npm run dev
 ```
 
-Mở trình duyệt truy cập: `http://localhost:5173`.
+Mở trình duyệt truy cập: `http://localhost:5173`.  
+*(Vite Dev Server đã tích hợp sẵn proxy `/api/fetch-metadata` giả lập serverless function an toàn để đọc link bên ngoài mà không bị lỗi CORS).*
 
 ---
 
-## 🌐 Hướng Dẫn Đẩy Lên GitHub & Deploy Lên Vercel
+## 🌐 Hướng Dẫn Triển Khai Lên Vercel (1-Click Deployment)
 
-Dự án đã được cấu hình sẵn file `vercel.json` và file build tương thích 100% với Vercel.
+Dự án đã được cấu hình tối ưu sẵn sàng deploy ngay lên Vercel:
 
-### Cách 1: Kéo thả / Đẩy lên GitHub bằng dòng lệnh
+### Cách 1: Đẩy mã nguồn lên GitHub rồi liên kết Vercel
+1. Đẩy toàn bộ thư mục `citation-studio` lên một repository mới trên GitHub:
+   ```bash
+   git init
+   git add .
+   git commit -m "feat: complete automatic citation generator"
+   git remote add origin https://github.com/<your-username>/<your-repo-name>.git
+   git push -u origin main
+   ```
+2. Truy cập [Vercel Dashboard](https://vercel.com/new).
+3. Chọn Import Repository vừa tạo.
+4. Giữ nguyên cấu hình mặc định (Framework Preset: **Vite**).
+5. Nhấn **Deploy**. Vercel sẽ tự động build frontend và kích hoạt Serverless API `/api/fetch-metadata` hoàn chỉnh!
 
-1. Tạo một repository mới trên GitHub (ví dụ đặt tên: `vietnam-citation-studio`).
-2. Mở terminal tại thư mục `citation-studio` và chạy:
-
+### Cách 2: Triển khai bằng Vercel CLI
 ```bash
-git init
-git add .
-git commit -m "feat: initial commit for Vietnam Citation Studio"
-git branch -M main
-git remote add origin https://github.com/<tai-khoan-cua-ban>/<ten-repo>.git
-git push -u origin main
+npm install -g vercel
+vercel
 ```
 
-*(Lưu ý: Thư mục `node_modules` và `dist` đã được cấu hình trong `.gitignore` nên khi đẩy lên sẽ cực kỳ gọn nhẹ).*
+---
 
-### Cách 2: Triển khai trực tiếp lên Vercel trong 1 phút
+## 🔒 Cam Kết Bảo Mật & Quyền Riêng Tư (Privacy by Design)
 
-1. Truy cập [https://vercel.com](https://vercel.com) và đăng nhập bằng tài khoản GitHub.
-2. Chọn **"Add New..."** -> **"Project"**.
-3. Chọn repository GitHub bạn vừa tạo ở trên và bấm **Import**.
-4. Vercel sẽ tự động phát hiện framework là **Vite**:
-   - **Framework Preset**: `Vite`
-   - **Build Command**: `npm run build`
-   - **Output Directory**: `dist`
-5. Nhấn **Deploy**. Chỉ sau khoảng 30 giây, dự án của bạn sẽ online với một đường link HTTPS miễn phí dạng `https://ten-du-an.vercel.app`!
+- **Zero Persistent Data**: Không bao giờ ghi dữ liệu người dùng vào ổ cứng hay trình duyệt qua LocalStorage, IndexedDB hoặc Cookies.
+- **Tự hủy 15 phút**: Mọi tài liệu và kết quả trích dẫn được lưu trữ tạm thời trong RAM của phiên trình duyệt. Sau 15 phút không thao tác, hệ thống kích hoạt xóa sạch bộ nhớ và đưa ra thông báo:  
+  *“Phiên trích dẫn đã hết hạn. Dữ liệu tạm thời đã được xóa.”*
+- **SSRF Defense**: Mọi URL bên ngoài được kiểm duyệt IP nghiêm ngặt nhằm bảo vệ hạ tầng máy chủ khỏi các cuộc tấn công rà quét mạng nội bộ.
+
+---
+
+## 📬 Liên Hệ Tác Giả
+
+- **Tác giả**: Anh Duy
+- **Email**: `duyanhdoan012@gmail.com`
+- **LinkedIn**: [Anh Duy trên LinkedIn](https://www.linkedin.com/in/anh-duy-401418316/)

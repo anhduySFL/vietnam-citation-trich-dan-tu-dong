@@ -1,15 +1,34 @@
-export type ItemType =
-  | 'book'
-  | 'book_chapter'
+export type StandardItemType =
   | 'journal'
+  | 'journal_online'
+  | 'book'
+  | 'book_ebook'
+  | 'book_database'
+  | 'book_chapter'
   | 'conference'
-  | 'newspaper'
+  | 'conference_presentation'
+  | 'proceedings'
   | 'thesis'
+  | 'newspaper'
   | 'webpage'
   | 'legal'
-  | 'manuscript';
+  | 'manuscript'
+  | 'org_document'
+  | 'org_online';
 
-export type CitationStyle = 'apa' | 'ieee' | 'vnu';
+export type ItemType = StandardItemType | string;
+
+export type BuiltinCitationStyle = 'apa' | 'ieee' | 'vnu' | 'vnua';
+export type CitationStyle = BuiltinCitationStyle | string;
+
+export type MetadataFieldSource = 
+  | 'json-ld'
+  | 'citation-meta'
+  | 'dublin-core'
+  | 'opengraph'
+  | 'crossref'
+  | 'user'
+  | 'inferred';
 
 export interface Author {
   id: string;
@@ -19,7 +38,7 @@ export interface Author {
   given?: string;
   isVietnamese?: boolean;
   isCorporate?: boolean;
-  originalScript?: string; // e.g. 谢丽芝 (for non-Latin)
+  originalScript?: string; // e.g. 谢丽芝 for non-Latin
 }
 
 export interface CitationItem {
@@ -27,59 +46,82 @@ export interface CitationItem {
   type: ItemType;
   title: string;
   authors: Author[];
-  year?: number | string; // e.g. 2020 or "đang in" / "forthcoming"
+  year?: number | string;
+  publicationDate?: string; // e.g. "2024-05-12" or "23/6/2014"
   language: 'vi' | 'en' | 'fr' | 'ru' | 'zh' | 'ja' | 'other';
-  
-  // Specific metadata
-  publisher?: string;
-  place?: string; // Nơi xuất bản / Địa điểm
-  edition?: string; // Lần tái bản (e.g. 2nd ed.)
-  totalPageCount?: string; // e.g. "389 tr." or "448 p."
-  
-  // Journal / Magazine
+
+  // Publication venue
   journalName?: string;
   volume?: string;
   issue?: string;
-  pages?: string; // e.g. "79-94"
+  edition?: string;
+  pages?: string;           // e.g. "79-94"
+  startPage?: string;       // "79"
+  endPage?: string;         // "94"
+  totalPages?: string;      // e.g. "389 tr." or "448 p."
   doi?: string;
-  
-  // Book chapter
+
+  // Book & Chapter
   bookTitle?: string;
   editors?: Author[];
-  
-  // Conference
+  publisher?: string;
+  place?: string;           // Nơi xuất bản / Thành phố
+
+  // Conference & Proceedings
   conferenceName?: string;
-  organizer?: string;
   conferenceLocation?: string;
   conferenceDate?: string;
-  
+  organizer?: string;
+
   // Thesis
-  degree?: string; // Luận án Tiến sĩ / Luận văn Thạc sĩ / PhD thesis
-  institution?: string; // Trường / Viện đào tạo
-  
-  // Newspaper
+  degree?: string;          // Luận án tiến sĩ / Luận văn thạc sĩ / Master thesis
+  institution?: string;      // Cơ sở đào tạo (Trường/Viện)
+
+  // Newspaper / Web
   newspaperName?: string;
-  pubDateExact?: string; // e.g. "23/6/2014" or "12/4/2012"
-  
-  // Web / Online
-  url?: string;
-  accessDate?: string; // e.g. "21/7/2016"
   siteName?: string;
-  
-  // Legal
-  documentNumber?: string; // e.g. "18/2014/TT-BNNPTNT"
-  issuingAuthority?: string; // e.g. "Bộ Nông nghiệp và Phát triển Nông thôn"
-  
+  url?: string;
+  accessDate?: string;      // e.g. "21/07/2024"
+
+  // Corporate & Legal
+  organization?: string;
+  documentNumber?: string;
+  issuingAuthority?: string;
+
+  // E-book & Database specifics
+  readerSoftware?: string;  // e.g. "ebook" or "phần mềm đọc sách"
+  databaseName?: string;
+
   // Non-Latin translation
-  translatedTitle?: string; // e.g. [The novel in modern Arabic literature]
-  
-  // In-text sequence tracking
-  inTextOrder?: number;
+  translatedTitle?: string;
+
+  // Source tracking
+  fieldSources?: Record<string, MetadataFieldSource>;
+
+  // Session TTL metadata
+  createdAt: number;
+  expiresAt: number;
 }
 
 export interface InTextCitationOptions {
-  style: CitationStyle;
-  isNarrative?: boolean; // e.g. According to Smith (2020) vs (Smith, 2020)
-  pageNumbers?: string;  // e.g. "tr. 97-98"
-  suffixYear?: string;   // e.g. 'a', 'b' for same author same year
+  isNarrative?: boolean;
+  pageNumbers?: string;
+  suffixYear?: string;
+  isEnglishText?: boolean;
+}
+
+export interface FormattedCitation {
+  inText: string;
+  bibliographyHtml: string;
+  bibliographyPlainText: string;
+}
+
+export interface StyleDefinition {
+  id: string;
+  displayName: string;
+  shortDescription: string;
+  sourceNote?: string;
+  supportedTypes: ItemType[];
+  authorRulesSummary: string;
+  isBuiltin: boolean;
 }

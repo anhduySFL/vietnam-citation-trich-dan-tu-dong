@@ -1,148 +1,162 @@
+import { useState } from 'react';
 import type { CitationStyle } from '../types/citation';
-
-import { BookOpen, Sparkles, FileText, Plus, HelpCircle, Download, RotateCcw } from 'lucide-react';
+import { BookOpen, ExternalLink, ChevronDown, Clock, HelpCircle, Layers } from 'lucide-react';
 
 interface NavbarProps {
-  currentStyle: CitationStyle;
-  onStyleChange: (style: CitationStyle) => void;
-  onOpenAddModal: () => void;
-  onOpenGuideModal: () => void;
-  onResetData: () => void;
-  onOpenExportModal: () => void;
-  itemCount: number;
+  onGoHome: () => void;
+  onOpenAbout: () => void;
+  onSelectGuideStyle: (style: CitationStyle) => void;
+  remainingTimeFormatted?: string;
+  hasActiveSession?: boolean;
+  currentView: 'generator' | 'guide';
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
-  currentStyle,
-  onStyleChange,
-  onOpenAddModal,
-  onOpenGuideModal,
-  onResetData,
-  onOpenExportModal,
-  itemCount,
+  onGoHome,
+  onOpenAbout,
+  onSelectGuideStyle,
+  remainingTimeFormatted,
+  hasActiveSession,
+  currentView
 }) => {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
+    <header className="sticky top-0 z-50 bg-[#1b2835] text-white shadow-md border-b-2 border-[#3a8080]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo & Brand */}
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-md shadow-indigo-100">
+          {/* LOGO & NAME */}
+          <div 
+            onClick={onGoHome}
+            className="flex items-center space-x-3 cursor-pointer group select-none"
+          >
+            <div className="w-10 h-10 rounded-[10px] bg-[#3a8080] flex items-center justify-center text-[#dcfdc3] shadow-md group-hover:scale-105 transition-transform">
               <BookOpen className="w-5 h-5" />
             </div>
             <div>
-              <div className="flex items-center space-x-2">
-                <span className="font-bold text-lg text-slate-900 tracking-tight">Vietnam Citation Studio</span>
-                <span className="hidden sm:inline-block px-2 py-0.5 text-xs font-semibold bg-indigo-50 text-indigo-700 rounded-full border border-indigo-200">
-                  Chuẩn ĐH Huế & VNU
-                </span>
+              <div className="font-bold text-lg text-[#dcfdc3] tracking-wider uppercase font-sans">
+                TRÍCH DẪN TỰ ĐỘNG
               </div>
-              <p className="text-xs text-slate-500 hidden md:block">
-                Hệ thống chuẩn hóa & trích dẫn nghiên cứu khoa học chuyên nghiệp
+              <p className="text-[11px] text-slate-300 hidden sm:block">
+                Chuẩn APA • IEEE • VNU (Hanoi) • VNUA
               </p>
             </div>
           </div>
 
-          {/* Style Selector Tabs */}
-          <div className="hidden lg:flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+          {/* Navigation Links */}
+          <nav className="flex items-center space-x-2 sm:space-x-5 text-sm font-semibold">
+            {/* Trang chủ */}
             <button
-              onClick={() => onStyleChange('apa')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
-                currentStyle === 'apa'
-                  ? 'bg-white text-indigo-700 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
+              onClick={onGoHome}
+              className={`px-3 py-1.5 rounded-[8px] transition-colors ${
+                currentView === 'generator'
+                  ? 'bg-[#3a8080] text-white'
+                  : 'text-slate-200 hover:text-[#dcfdc3]'
               }`}
             >
-              <Sparkles className="w-3.5 h-3.5" />
-              APA (ĐH Huế)
-            </button>
-            <button
-              onClick={() => onStyleChange('ieee')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
-                currentStyle === 'ieee'
-                  ? 'bg-white text-indigo-700 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <FileText className="w-3.5 h-3.5" />
-              IEEE (ĐH Huế)
-            </button>
-            <button
-              onClick={() => onStyleChange('vnu')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
-                currentStyle === 'vnu'
-                  ? 'bg-white text-indigo-700 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <BookOpen className="w-3.5 h-3.5" />
-              VNU (ĐHQG Hà Nội)
-            </button>
-          </div>
-
-          {/* Actions */}
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={onOpenGuideModal}
-              title="Sổ tay quy tắc trích dẫn"
-              className="p-2 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition-colors flex items-center text-xs font-medium gap-1"
-            >
-              <HelpCircle className="w-4 h-4 text-indigo-600" />
-              <span className="hidden sm:inline">Quy chuẩn</span>
+              Trang chủ
             </button>
 
+            {/* Giới thiệu */}
             <button
-              onClick={onResetData}
-              title="Tải lại mẫu dữ liệu thực tế từ ĐH Huế & VNU"
-              className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+              onClick={onOpenAbout}
+              className="px-3 py-1.5 rounded-[8px] text-slate-200 hover:text-[#dcfdc3] transition-colors flex items-center gap-1"
             >
-              <RotateCcw className="w-4 h-4" />
+              <HelpCircle className="w-4 h-4 text-[#dcfdc3]" />
+              <span>Giới thiệu</span>
             </button>
 
-            <button
-              onClick={onOpenExportModal}
-              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5"
+            {/* Tri Vân (Hệ sinh thái ngoài) */}
+            <a
+              href="https://tailieutrivan.id.vn"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3 py-1.5 rounded-[8px] text-slate-200 hover:text-[#dcfdc3] transition-colors flex items-center gap-1 bg-[#3a8080]/30 hover:bg-[#3a8080]/60 border border-[#3a8080]"
+              title="Chuyển sang website Tri Vân: tailieutrivan.id.vn"
             >
-              <Download className="w-4 h-4" />
-              <span className="hidden sm:inline">Xuất TLTK</span> ({itemCount})
-            </button>
+              <span>Tri Vân</span>
+              <ExternalLink className="w-3.5 h-3.5 text-[#dcfdc3]" />
+            </a>
 
-            <button
-              onClick={onOpenAddModal}
-              className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-sm shadow-indigo-200 transition-all flex items-center gap-1.5 active:scale-95"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Thêm TLTK</span>
-            </button>
-          </div>
-        </div>
+            {/* Danh mục (Quy cách trích dẫn dropdown) */}
+            <div className="relative">
+              <button
+                onClick={() => setIsDropdownOpen(prev => !prev)}
+                className={`px-3 py-1.5 rounded-[8px] transition-colors flex items-center gap-1.5 ${
+                  currentView === 'guide'
+                    ? 'bg-[#3a8080] text-white'
+                    : 'bg-[#3a8080]/40 text-[#dcfdc3] hover:bg-[#3a8080]/70'
+                }`}
+              >
+                <Layers className="w-4 h-4" />
+                <span className="hidden sm:inline">Danh mục quy cách</span>
+                <span className="sm:hidden">Quy cách</span>
+                <ChevronDown className="w-3.5 h-3.5" />
+              </button>
 
-        {/* Mobile Style Selector */}
-        <div className="flex lg:hidden items-center justify-around py-2 border-t border-slate-100">
-          <button
-            onClick={() => onStyleChange('apa')}
-            className={`px-3 py-1 rounded-md text-xs font-semibold ${
-              currentStyle === 'apa' ? 'bg-indigo-100 text-indigo-700' : 'text-slate-600'
-            }`}
-          >
-            APA (ĐH Huế)
-          </button>
-          <button
-            onClick={() => onStyleChange('ieee')}
-            className={`px-3 py-1 rounded-md text-xs font-semibold ${
-              currentStyle === 'ieee' ? 'bg-indigo-100 text-indigo-700' : 'text-slate-600'
-            }`}
-          >
-            IEEE (ĐH Huế)
-          </button>
-          <button
-            onClick={() => onStyleChange('vnu')}
-            className={`px-3 py-1 rounded-md text-xs font-semibold ${
-              currentStyle === 'vnu' ? 'bg-indigo-100 text-indigo-700' : 'text-slate-600'
-            }`}
-          >
-            VNU (ĐHQGHN)
-          </button>
+              {isDropdownOpen && (
+                <div 
+                  className="absolute right-0 mt-2 w-56 bg-white rounded-[10px] shadow-xl border border-slate-200 py-2 z-50 text-slate-800 animate-in fade-in slide-in-from-top-2"
+                  onMouseLeave={() => setIsDropdownOpen(false)}
+                >
+                  <div className="px-3 py-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
+                    Tra cứu quy chuẩn
+                  </div>
+                  <button
+                    onClick={() => {
+                      onSelectGuideStyle('apa');
+                      setIsDropdownOpen(false);
+                    }}
+                    className="w-full text-left px-3.5 py-2 text-xs hover:bg-[#dcfdc3]/40 hover:text-[#1b2835] font-semibold transition-colors flex items-center justify-between"
+                  >
+                    <span>1. Chuẩn APA</span>
+                    <span className="text-[10px] text-slate-400">Tác giả - Năm</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      onSelectGuideStyle('ieee');
+                      setIsDropdownOpen(false);
+                    }}
+                    className="w-full text-left px-3.5 py-2 text-xs hover:bg-[#dcfdc3]/40 hover:text-[#1b2835] font-semibold transition-colors flex items-center justify-between"
+                  >
+                    <span>2. Chuẩn IEEE</span>
+                    <span className="text-[10px] text-slate-400">Số thứ tự [1]</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      onSelectGuideStyle('vnu');
+                      setIsDropdownOpen(false);
+                    }}
+                    className="w-full text-left px-3.5 py-2 text-xs hover:bg-[#dcfdc3]/40 hover:text-[#1b2835] font-semibold transition-colors flex items-center justify-between"
+                  >
+                    <span>3. VNU (Hanoi)</span>
+                    <span className="text-[10px] text-slate-400">Bộ GD&ĐT / ĐHQG</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      onSelectGuideStyle('vnua');
+                      setIsDropdownOpen(false);
+                    }}
+                    className="w-full text-left px-3.5 py-2 text-xs hover:bg-[#dcfdc3]/40 hover:text-[#1b2835] font-semibold transition-colors flex items-center justify-between"
+                  >
+                    <span>4. VNUA</span>
+                    <span className="text-[10px] text-slate-400">QĐ 491/QĐ-HVN</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Session Timer indicator (15 min) */}
+            {hasActiveSession && (
+              <div 
+                className="hidden lg:flex items-center gap-1.5 px-3 py-1 bg-[#dcfdc3] text-[#1b2835] rounded-[8px] font-mono text-xs font-bold shadow-xs border border-[#3a8080]"
+                title="Dữ liệu tạm thời của phiên này sẽ tự hủy khi bộ đếm về 00:00"
+              >
+                <Clock className="w-3.5 h-3.5 text-[#3a8080] animate-pulse" />
+                <span>Hết hạn: {remainingTimeFormatted}</span>
+              </div>
+            )}
+          </nav>
         </div>
       </div>
     </header>

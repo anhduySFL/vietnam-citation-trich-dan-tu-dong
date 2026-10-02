@@ -1,7 +1,6 @@
 import type { CitationItem, Author } from '../types/citation';
 import { formatAuthorForIeeeBib } from '../utils/nameParser';
-import type { FormattedCitation } from './apaEngine';
-
+import type { FormattedBibResult } from './apaEngine';
 
 export function formatIeeeAuthors(authors: Author[], isEnglish = false): string {
   if (!authors || authors.length === 0) return '';
@@ -24,12 +23,6 @@ export function formatIeeeAuthors(authors: Author[], isEnglish = false): string 
   return `${first3}, ... ${last}`;
 }
 
-/**
- * Collapse list of reference numbers into ranges:
- * e.g. [2, 3, 4] -> "[2–4]"
- * e.g. [2, 10] -> "[2, 10]"
- * e.g. [2, 3, 4, 7, 9, 10, 11] -> "[2–4, 7, 9–11]"
- */
 export function collapseIeeeNumbers(numbers: number[], pageNumber?: string): string {
   if (numbers.length === 0) return '';
   const sorted = Array.from(new Set(numbers)).sort((a, b) => a - b);
@@ -62,7 +55,7 @@ export function collapseIeeeNumbers(numbers: number[], pageNumber?: string): str
   return `[${ranges.join(', ')}]`;
 }
 
-export function formatIeeeBibItem(item: CitationItem, index: number): FormattedCitation {
+export function formatIeeeBibItem(item: CitationItem, index: number): FormattedBibResult {
   const isEn = item.language === 'en';
   const prefix = `[${index}] `;
   const authorsStr = formatIeeeAuthors(item.authors, isEn);
@@ -74,7 +67,8 @@ export function formatIeeeBibItem(item: CitationItem, index: number): FormattedC
   let plainBody = '';
 
   switch (item.type) {
-    case 'book': {
+    case 'book':
+    case 'book_print': {
       const editionPart = item.edition ? `, ${item.edition}` : '';
       const placePub = item.place && item.publisher ? `${item.place}: ${item.publisher}` : (item.publisher || '');
       const pubInfo = [placePub, year].filter(Boolean).join(', ');
@@ -98,7 +92,8 @@ export function formatIeeeBibItem(item: CitationItem, index: number): FormattedC
       plainBody = `${prefix}${authorPrefix}“${title},” ${inWord} ${item.bookTitle || ''}${editionPart}${editorsStr}. ${pubInfo}${pageInfo}.`;
       break;
     }
-    case 'journal': {
+    case 'journal':
+    case 'journal_online': {
       const journalName = item.journalName ? `<i>${item.journalName}</i>` : '';
       const vol = item.volume ? (isEn ? `, Vol. ${item.volume}` : `, Tập ${item.volume}`) : '';
       const issue = item.issue ? (isEn ? `, No. ${item.issue}` : `, Số ${item.issue}`) : '';
@@ -109,7 +104,9 @@ export function formatIeeeBibItem(item: CitationItem, index: number): FormattedC
       plainBody = `${prefix}${authorPrefix}“${title},” ${item.journalName || ''}${vol}${issue}${pages}, ${year}.${doi}`;
       break;
     }
-    case 'conference': {
+    case 'conference':
+    case 'proceedings':
+    case 'conference_presentation': {
       const inWord = isEn ? 'in' : 'trong';
       const confName = item.conferenceName ? `<i>${item.conferenceName}</i>` : '';
       const loc = item.conferenceLocation ? `, ${item.conferenceLocation}` : '';
@@ -124,7 +121,7 @@ export function formatIeeeBibItem(item: CitationItem, index: number): FormattedC
     }
     case 'newspaper': {
       const paperName = item.newspaperName ? `<i>${item.newspaperName}</i>` : '';
-      const datePart = item.pubDateExact ? ` (${item.pubDateExact})` : (year ? ` (${year})` : '');
+      const datePart = item.publicationDate ? ` (${item.publicationDate})` : (year ? ` (${year})` : '');
       const pageInfo = item.pages ? (isEn ? `, pp. ${item.pages}` : `, tr. ${item.pages}`) : '';
 
       htmlBody = `${prefix}${authorPrefix}“${title},” ${paperName}${datePart}${pageInfo}.`;
@@ -139,7 +136,8 @@ export function formatIeeeBibItem(item: CitationItem, index: number): FormattedC
       plainBody = `${prefix}${authorPrefix}“${title},” ${inst}.`;
       break;
     }
-    case 'webpage': {
+    case 'webpage':
+    case 'org_online': {
       const onlineTag = isEn ? '[Online]' : '[Trực tuyến]';
       const addrTag = isEn ? 'Available:' : 'Địa chỉ:';
       const accessTag = isEn ? 'Accessed' : 'Truy cập';
@@ -147,15 +145,6 @@ export function formatIeeeBibItem(item: CitationItem, index: number): FormattedC
 
       htmlBody = `${prefix}${authorPrefix}“${title},”${timePart}. ${onlineTag}. ${addrTag} ${item.url || ''}. [${accessTag} ${item.accessDate || ''}].`;
       plainBody = `${prefix}${authorPrefix}“${title},”${timePart}. ${onlineTag}. ${addrTag} ${item.url || ''}. [${accessTag} ${item.accessDate || ''}].`;
-      break;
-    }
-    case 'legal': {
-      const auth = item.issuingAuthority || authorsStr;
-      const docNum = item.documentNumber ? `, ${item.documentNumber}` : '';
-      const dateExact = item.pubDateExact ? ` ngày ${item.pubDateExact}` : '';
-
-      htmlBody = `${prefix}${auth}${docNum}${dateExact} ${title}, ${year}.`;
-      plainBody = `${prefix}${auth}${docNum}${dateExact} ${title}, ${year}.`;
       break;
     }
     default: {
